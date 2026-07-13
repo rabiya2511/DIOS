@@ -15,4 +15,5 @@ invites_db: dict[str, dict] = {}                     # invite_token -> {"email":
 organizations_db: dict[str, dict] = {}               # org_id -> {"name":..., "owner_email":..., "created_at":...}
 passwordless_tokens_db: dict[str, str] = {}           # login_token -> email
 device_codes_db: dict[str, dict] = {}  
-password_history_db: dict[str, list[str]] = {}    # email -> list of previous hashed passwords               # device_code -> {"user_code":..., "email": None, "approved": False}    # email -> list of unused backup codes
+password_history_db: dict[str, list[str]] = {} 
+oauth_connections_db: dict[str, dict[str, str]] = {}   # email -> {provider: provider_user_id}   # email -> list of previous hashed passwords               # device_code -> {"user_code":..., "email": None, "approved": False}    # email -> list of unused backup codes
