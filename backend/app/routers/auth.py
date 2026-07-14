@@ -38,6 +38,8 @@ from app.models.user import (
     organizations_db,
     passwordless_tokens_db,
     device_codes_db,
+    login_history_db,
+    audit_logs_db,
 )
 from app.core.security import (
     hash_password,
@@ -69,8 +71,20 @@ def register(data: RegisterRequest):
 @router.post("/login", response_model=TokenResponse)
 def login(data: LoginRequest):
     user = users_db.get(data.email)
+    login_history_db.setdefault(data.email, []).append({
+        "success": bool(user and verify_password(data.password, user["hashed_password"])),
+        "ip": "127.0.0.1",  # TODO: capture real client IP once behind a proper request context
+        "timestamp": datetime.now(timezone.utc),
+    })
+
     if not user or not verify_password(data.password, user["hashed_password"]):
         raise HTTPException(status_code=401, detail="Incorrect email or password")
+
+    audit_logs_db.append({
+        "actor_email": user["email"],
+        "action": "login",
+        "timestamp": datetime.now(timezone.utc),
+    })
 
     access_token = create_access_token(user["email"])
     refresh_token = create_refresh_token(user["email"])
