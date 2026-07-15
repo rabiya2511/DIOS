@@ -20,7 +20,7 @@ from app.schemas.admin_org_roles import (
 )
 from app.models.user import organizations_db, roles_db, permission_overrides_db, policies_db
 from app.core.security import get_current_admin
-from app.routers.roles import AVAILABLE_PERMISSIONS
+from app.routers.permissions import permissions_db
 
 router = APIRouter(prefix="/api/v1/admin", tags=["Admin: Organization & Roles"])
 
@@ -74,7 +74,7 @@ def update_permission_description(
     data: AdminPermissionUpdateRequest,
     current_admin: dict = Depends(get_current_admin),
 ):
-    valid_keys = {p["key"] for p in AVAILABLE_PERMISSIONS}
+    valid_keys = {p["key"] for p in permissions_db.values()}
     if data.key not in valid_keys:
         raise HTTPException(status_code=404, detail="Permission key not found")
 

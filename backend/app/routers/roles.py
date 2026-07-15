@@ -12,7 +12,7 @@ from app.schemas.roles import (
     RoleCreateRequest,
     RoleUpdateRequest,
     RoleOut,
-    PermissionOut,
+   
 )
 from app.models.user import roles_db
 from app.core.security import get_current_user
@@ -20,16 +20,7 @@ from app.core.security import get_current_user
 router = APIRouter(prefix="/api/v1", tags=["Roles & Permissions"])
 
 # Fixed reference list — not user-editable, just describes what's available to assign.
-AVAILABLE_PERMISSIONS = [
-    {"key": "users:read", "description": "View user profiles"},
-    {"key": "users:write", "description": "Create or edit users"},
-    {"key": "users:delete", "description": "Delete users"},
-    {"key": "organizations:read", "description": "View organizations"},
-    {"key": "organizations:write", "description": "Create or edit organizations"},
-    {"key": "roles:manage", "description": "Create, edit, or delete roles"},
-    {"key": "api_keys:manage", "description": "Create, rotate, or revoke API keys"},
-    {"key": "audit:read", "description": "View audit logs and security events"},
-]
+
 
 
 def _seed_system_roles():
@@ -68,9 +59,6 @@ def _require_custom(role: dict, action: str):
         raise HTTPException(status_code=403, detail=f"System roles cannot be {action}")
 
 
-@router.get("/permissions", response_model=list[PermissionOut])
-def list_permissions(current_user: dict = Depends(get_current_user)):
-    return AVAILABLE_PERMISSIONS
 
 
 @router.get("/roles", response_model=list[RoleOut])
