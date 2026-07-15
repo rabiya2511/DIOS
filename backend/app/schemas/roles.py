@@ -23,6 +23,9 @@ class RoleOut(BaseModel):
     name: str
     permissions: list[str]
     created_at: datetime
+    description: Optional[str] = None
+    is_system: bool = False
+    archived: bool = False
 
 
 class PermissionOut(BaseModel):
