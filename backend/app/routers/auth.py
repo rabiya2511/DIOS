@@ -63,6 +63,7 @@ def register(data: RegisterRequest):
         "full_name": data.full_name,
         "hashed_password": hash_password(data.password),
         "created_at": datetime.now(timezone.utc),
+        "is_admin": False,
     }
     users_db[data.email] = user
     return user
@@ -135,6 +136,7 @@ def register_via_invite(data: RegisterInviteRequest):
         "email_verified": True,  # invited users are pre-trusted
         "organization_id": invite.get("organization_id"),
         "role": invite.get("role", "member"),
+        "is_admin": False,
     }
     users_db[email] = user
     del invites_db[data.invite_token]  # one-time use
@@ -163,6 +165,7 @@ def register_organization(data: RegisterOrganizationRequest):
         "email_verified": False,
         "organization_id": org_id,
         "role": "owner",
+        "is_admin": False,
     }
     users_db[data.email] = user
     return user
@@ -252,6 +255,7 @@ def login_sso(data: SSOLoginRequest):
             "hashed_password": "",  # SSO users have no local password
             "created_at": datetime.now(timezone.utc),
             "email_verified": True,
+            "is_admin": False,
         }
 
     access_token = create_access_token(email)
@@ -287,7 +291,7 @@ def login_device(data: DeviceLoginRequest):
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
 
-# ─── TEMPORARY test-only helper — remove once a real device-approval UI exists ───
+# ─── TEMPORARY test-only helpers — remove once real device-approval UI / admin roles exist ───
 
 class _TestApproveDeviceRequest(BaseModel):
     user_code: str
@@ -302,3 +306,9 @@ def _test_approve_device(data: _TestApproveDeviceRequest):
             entry["email"] = data.email
             return None
     raise HTTPException(status_code=404, detail="User code not found")
+
+
+@router.post("/_test-make-admin", status_code=204)
+def _test_make_admin(current_user: dict = Depends(get_current_user)):
+    current_user["is_admin"] = True
+    return None

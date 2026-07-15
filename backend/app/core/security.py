@@ -11,6 +11,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from jose import JWTError, jwt
+from fastapi import HTTPException
 
 from app.core.config import (
     SECRET_KEY,
@@ -61,3 +62,9 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     if user is None:
         raise credentials_exception
     return user
+
+
+def get_current_admin(current_user: dict = Depends(get_current_user)):
+    if not current_user.get("is_admin", False):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user

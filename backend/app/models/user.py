@@ -23,3 +23,45 @@ devices_db: dict[str, dict] = {}   # id -> {id, owner_email, name, trusted, acti
 security_events_db: dict[str, list[dict]] = {}    # email -> list of {event, timestamp, detail}
 login_history_db: dict[str, list[dict]] = {}       # email -> list of {success, timestamp, ip}
 audit_logs_db: list[dict] = []                      # global list of {actor_email, action, timestamp}
+permission_overrides_db: dict[str, str] = {}   # permission_key -> overridden description
+policies_db: dict = {
+    "password_min_length": 8,
+    "password_require_uppercase": True,
+    "password_require_number": True,
+    "session_timeout_minutes": 30,
+    "mfa_required_for_admins": False,
+}
+platform_config_db: dict = {
+    "site_name": "DIOS",
+    "support_email": "support@dios.example.com",
+    "maintenance_mode": False,
+}
+feature_flags_db: dict = {
+    "new_dashboard": False,
+    "beta_api_access": False,
+    "dark_mode": True,
+}
+licenses_db: dict = {
+    "plan": "Enterprise",
+    "seats": 100,
+    "seats_used": 1,
+    "expires_at": "2027-01-01T00:00:00Z",
+}
+branding_db: dict = {
+    "logo_url": "",
+    "primary_color": "#000000",
+    "company_name": "DIOS",
+}
+system_ops_log_db: list[dict] = []   # {operation, timestamp, triggered_by}
+backups_db: list[dict] = []   # {id, created_at, triggered_by}
+app_logs_db: list[dict] = [
+    {"level": "INFO", "message": "Application started", "timestamp": "2026-07-15T00:00:00Z"},
+]
+alerts_db: list[dict] = [
+    {"id": "alert-1", "severity": "warning", "message": "High memory usage detected", "active": True},
+]
+admin_settings_db: dict = {
+    "backup_frequency_hours": 24,
+    "log_retention_days": 30,
+    "alert_email": "alerts@dios.example.com",
+}
