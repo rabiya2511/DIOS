@@ -65,3 +65,12 @@ admin_settings_db: dict = {
     "log_retention_days": 30,
     "alert_email": "alerts@dios.example.com",
 }
+resource_owners_db: dict[str, str] = {}                    # resource_id -> owner_email
+resource_shares_db: dict[str, list[dict]] = {}              # resource_id -> [{id, email, permission}]
+resource_locks_db: dict[str, bool] = {}    
+service_account_roles_db: dict[str, list[str]] = {}         # account_id -> [role names]
+service_account_permissions_db: dict[str, list[str]] = {}   # account_id -> [permission keys]
+service_account_secrets_db: dict[str, str] = {}              # account_id -> current secret
+authz_audit_db: list[dict] = []       # {id, actor_email, action, resource_type, resource_id, timestamp, archived}
+authz_violations_db: list[dict] = []  # {id, actor_email, action, reason, timestamp} — populated by access checks later
+authz_reviews_db: list[dict] = []     # {id, reviewer_email, note, timestamp}

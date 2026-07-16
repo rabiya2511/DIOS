@@ -23,3 +23,22 @@ class ServiceAccountOut(BaseModel):
     owner_email: str
     active: bool
     created_at: datetime
+class ServiceAccountRoleAddRequest(BaseModel):
+    role: str
+
+
+class ServiceAccountPermissionAddRequest(BaseModel):
+    permission: str
+
+
+class ServiceAccountAccessOut(BaseModel):
+    id: str
+    active: bool
+    roles: list[str]
+    permissions: list[str]
+
+
+class ServiceAccountRotateSecretResponse(BaseModel):
+    id: str
+    secret: str
+    message: str
