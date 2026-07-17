@@ -74,3 +74,7 @@ service_account_secrets_db: dict[str, str] = {}              # account_id -> cur
 authz_audit_db: list[dict] = []       # {id, actor_email, action, resource_type, resource_id, timestamp, archived}
 authz_violations_db: list[dict] = []  # {id, actor_email, action, reason, timestamp} — populated by access checks later
 authz_reviews_db: list[dict] = []     # {id, reviewer_email, note, timestamp}
+groups_db: dict[str, dict] = {}                # id -> {id, name, creator_email, created_at}
+group_members_db: dict[str, list[str]] = {}    # group_id -> [emails]
+groups_db: dict[str, dict] = {}              # keyed by group id
+group_members_db: dict[str, list[str]] = {}  # group_id -> list of user emails

@@ -1,6 +1,6 @@
 """
 Pydantic schemas for the Profile domain (/me, avatar, preferences,
-language, timezone).
+language, timezone, display_name, bio).
 STUBBED: avatar upload doesn't hit real storage — it returns a fake URL.
 """
 
@@ -14,6 +14,8 @@ class ProfileResponse(BaseModel):
     id: str
     email: EmailStr
     full_name: str
+    display_name: str | None = None
+    bio: str | None = None
     avatar_url: str | None = None
     language: str
     timezone: str
@@ -49,3 +51,33 @@ class LanguageUpdateRequest(BaseModel):
 
 class TimezoneUpdateRequest(BaseModel):
     timezone: str  # e.g. "Asia/Kolkata", "UTC"
+
+
+class DisplayNameUpdateRequest(BaseModel):
+    display_name: str
+
+
+class BioUpdateRequest(BaseModel):
+    bio: str
+class ThemeUpdateRequest(BaseModel):
+    theme: str  # e.g. "light", "dark", "system"
+
+
+class NotificationsPreferencesUpdateRequest(BaseModel):
+    notifications: dict[str, Any]
+
+
+class PrivacyPreferencesUpdateRequest(BaseModel):
+    privacy: dict[str, Any]
+
+
+class AccessibilityPreferencesUpdateRequest(BaseModel):
+    accessibility: dict[str, Any]
+
+
+class AIPreferencesUpdateRequest(BaseModel):
+    ai: dict[str, Any]
+
+
+class EmailPreferencesUpdateRequest(BaseModel):
+    email: dict[str, Any]

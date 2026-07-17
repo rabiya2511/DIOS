@@ -82,4 +82,4 @@ def logout_device(
         raise HTTPException(status_code=404, detail="Device not found")
 
     device["active"] = False
-    return None
+    return None 
