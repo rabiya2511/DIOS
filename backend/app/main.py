@@ -6,7 +6,7 @@ its own router file, then added here with one line.
 
 from fastapi import FastAPI
 
-from app.routers import auth, password, mfa, oauth, tokens, profile, organizations, api_keys, service_accounts, roles, permissions, role_assignments, policies, access, org_authorization, teams, resources, user_management, devices, security, admin_users, admin_org_roles, admin_platform, admin_system, admin_security, admin_backup, authz_audit, groups, workspaces, activity, sessions
+from app.routers import auth, password, mfa, oauth, tokens, profile, organizations, api_keys, service_accounts, roles, permissions, role_assignments, policies, access, org_authorization, teams, resources, user_management, devices, security, admin_users, admin_org_roles, admin_platform, admin_system, admin_security, admin_backup, authz_audit, groups, workspaces, activity, sessions, notifications, email
 
 app = FastAPI(title="DIOS API", version="0.1.0")
 
@@ -41,7 +41,8 @@ app.include_router(groups.router)
 app.include_router(workspaces.router)
 app.include_router(activity.router)
 app.include_router(sessions.router)
-
+app.include_router(notifications.router)
+app.include_router(email.router)
 
 @app.get("/")
 def root():
