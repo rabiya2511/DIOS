@@ -19,6 +19,8 @@ from app.schemas.user_management import (
     UserBulkImportResult,
     UserBulkImportResponse,
     UserBulkExportResponse,
+    UserActivateRequest,
+    UserDeactivateRequest,
 )
 from app.models.user import users_db
 from app.core.security import hash_password, get_current_user
@@ -33,9 +35,9 @@ def _to_response(user: dict) -> dict:
         "email": user["email"],
         "full_name": user["full_name"],
         "email_verified": user.get("email_verified", False),
+        "active": user.get("active", True),
         "created_at": user["created_at"],
     }
-
 
 def _find_user_by_id(user_id: str) -> dict:
     for user in users_db.values():
@@ -135,3 +137,23 @@ def bulk_import_users(
 @router.post("/bulk-export", response_model=UserBulkExportResponse)
 def bulk_export_users(current_user: dict = Depends(get_current_user)):
     return UserBulkExportResponse(users=[_to_response(u) for u in users_db.values()])
+
+@router.post("/activate", response_model=UserResponse)
+def activate_user(
+    data: UserActivateRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    user = _find_user_by_id(data.id)
+    user["active"] = True
+    return _to_response(user)
+
+
+@router.post("/deactivate", response_model=UserResponse)
+def deactivate_user(
+    data: UserDeactivateRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    user = _find_user_by_id(data.id)
+    user["active"] = False
+    return _to_response(user)
+

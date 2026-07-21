@@ -25,8 +25,8 @@ class UserResponse(BaseModel):
     email: EmailStr
     full_name: str
     email_verified: bool = False
+    active: bool = True
     created_at: datetime
-
 
 class UserSearchRequest(BaseModel):
     query: str  # substring match against email or full_name
@@ -48,3 +48,10 @@ class UserBulkImportResponse(BaseModel):
 
 class UserBulkExportResponse(BaseModel):
     users: list[UserResponse]
+
+class UserActivateRequest(BaseModel):
+    id: str
+
+
+class UserDeactivateRequest(BaseModel):
+    id: str

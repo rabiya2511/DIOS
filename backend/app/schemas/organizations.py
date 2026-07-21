@@ -4,7 +4,7 @@ STUBBED: invite doesn't send a real email — it adds the member directly.
 """
 
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, EmailStr
 
@@ -13,6 +13,10 @@ Role = Literal["owner", "admin", "member"]
 
 class OrganizationCreateRequest(BaseModel):
     name: str
+
+
+class OrganizationUpdateRequest(BaseModel):
+    name: Optional[str] = None
 
 
 class OrganizationResponse(BaseModel):
@@ -48,3 +52,11 @@ class MemberItem(BaseModel):
 class MembersResponse(BaseModel):
     org_id: str
     members: list[MemberItem]
+
+
+class ArchiveRequest(BaseModel):
+    org_id: str
+
+
+class RestoreRequest(BaseModel):
+    org_id: str
