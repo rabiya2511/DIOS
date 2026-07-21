@@ -1,30 +1,28 @@
 """
-Pydantic schemas for the Team Authorization domain (Authorization APIs
-blueprint). Teams are a standalone entity with flat membership (no
-per-member roles) and their own granted-permission set, same pattern
-as Organization Authorization's permission grants.
+Pydantic schemas for the Teams domain.
 """
 
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 
 
 class TeamCreateRequest(BaseModel):
     name: str
-    description: str | None = None
+    description: Optional[str] = None
 
 
 class TeamUpdateRequest(BaseModel):
-    name: str | None = None
-    description: str | None = None
+    name: Optional[str] = None
+    description: Optional[str] = None
 
 
 class TeamResponse(BaseModel):
     id: str
     name: str
-    description: str | None = None
-    creator_email: EmailStr
+    description: Optional[str] = None
+    creator_email: str
     created_at: datetime
 
 
@@ -33,7 +31,7 @@ class TeamMemberAddRequest(BaseModel):
 
 
 class TeamMemberResponse(BaseModel):
-    email: EmailStr
+    email: str
 
 
 class TeamPermissionGrantRequest(BaseModel):
@@ -43,4 +41,8 @@ class TeamPermissionGrantRequest(BaseModel):
 class TeamPermissionResponse(BaseModel):
     key: str
     granted_at: datetime
-   
+
+
+class TeamMemberBodyRequest(BaseModel):
+    team_id: str
+    email: EmailStr

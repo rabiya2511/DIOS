@@ -1,8 +1,9 @@
 """
 Teams router — CRUD, members, permissions.
 Matches the Team Authorization section of the Authorization APIs
-blueprint (10/10). Only the team creator can update/delete the team
-or manage its members/permissions.
+blueprint (10/10), plus GET /{id} and body-based /member endpoints
+from the User & Organization blueprint. Only the team creator can
+update/delete the team or manage its members/permissions.
 """
 
 from datetime import datetime, timezone
@@ -18,6 +19,7 @@ from app.schemas.teams import (
     TeamMemberResponse,
     TeamPermissionGrantRequest,
     TeamPermissionResponse,
+    TeamMemberBodyRequest,
 )
 from app.routers.permissions import permissions_db
 from app.core.security import get_current_user
@@ -72,6 +74,47 @@ def create_team(
     team_members_db[team_id] = {current_user["email"]}
     team_permissions_db[team_id] = {}
     return teams_db[team_id]
+
+
+# ─── Literal-path routes MUST come before any /{id} routes below ───
+
+@router.post("/member", response_model=TeamMemberResponse, status_code=201)
+def add_team_member_by_body(
+    data: TeamMemberBodyRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    team = _get_team_or_404(data.team_id)
+    _require_creator(team, current_user["email"])
+    team_members_db.setdefault(data.team_id, set()).add(data.email)
+    return TeamMemberResponse(email=data.email)
+
+
+@router.delete("/member", status_code=204)
+def remove_team_member_by_body(
+    data: TeamMemberBodyRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    team = _get_team_or_404(data.team_id)
+    _require_creator(team, current_user["email"])
+    if data.email == team["creator_email"]:
+        raise HTTPException(status_code=400, detail="Cannot remove the team creator")
+
+    members = team_members_db.get(data.team_id, set())
+    if data.email not in members:
+        raise HTTPException(status_code=404, detail="Member not found in team")
+    members.discard(data.email)
+    return None
+
+
+# ─── Dynamic /{id} routes come LAST ───
+
+@router.get("/{id}", response_model=TeamResponse)
+def get_team(id: str, current_user: dict = Depends(get_current_user)):
+    team = _get_team_or_404(id)
+    members = team_members_db.get(id, set())
+    if current_user["email"] not in members:
+        raise HTTPException(status_code=403, detail="Not a member of this team")
+    return team
 
 
 @router.patch("/{id}", response_model=TeamResponse)
