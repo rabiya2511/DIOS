@@ -14,9 +14,11 @@ from app.schemas.admin_users import (
     AdminUserActionRequest,
     AdminResetPasswordResponse,
     AdminUserActivityOut,
+    ImpersonateResponse,
+    EndImpersonationRequest,
 )
-from app.models.user import users_db, password_reset_tokens_db, login_history_db
-from app.core.security import get_current_admin
+from app.models.user import users_db, password_reset_tokens_db, login_history_db,impersonation_sessions_db
+from app.core.security import get_current_admin,create_access_token
 
 router = APIRouter(prefix="/api/v1/admin/users", tags=["Admin: Users"])
 
@@ -111,3 +113,52 @@ def get_user_activity(current_admin: dict = Depends(get_current_admin)):
             })
     activity.sort(key=lambda x: x["timestamp"], reverse=True)
     return activity
+@router.post("/lock", status_code=204)
+def lock_user(
+    data: AdminUserActionRequest,
+    current_admin: dict = Depends(get_current_admin),
+):
+    user = users_db.get(data.email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user["locked"] = True
+    return None
+
+
+@router.post("/unlock", status_code=204)
+def unlock_user(
+    data: AdminUserActionRequest,
+    current_admin: dict = Depends(get_current_admin),
+):
+    user = users_db.get(data.email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user["locked"] = False
+    return None
+
+
+@router.post("/impersonate", response_model=ImpersonateResponse)
+def impersonate_user(
+    data: AdminUserActionRequest,
+    current_admin: dict = Depends(get_current_admin),
+):
+    target = users_db.get(data.email)
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    impersonation_token = create_access_token(target["email"])
+    impersonation_sessions_db[impersonation_token] = current_admin["email"]
+
+    return ImpersonateResponse(
+        access_token=impersonation_token,
+        impersonated_email=target["email"],
+        message=f"Now impersonating {target['email']}. Use this token for requests; call end-impersonation when done.",
+    )
+
+
+@router.post("/end-impersonation", status_code=204)
+def end_impersonation(data: EndImpersonationRequest):
+    if data.access_token not in impersonation_sessions_db:
+        raise HTTPException(status_code=400, detail="This token is not an active impersonation session")
+    del impersonation_sessions_db[data.access_token]
+    return None

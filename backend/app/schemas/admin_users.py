@@ -36,3 +36,11 @@ class AdminUserActivityOut(BaseModel):
     success: bool
     ip: str
     timestamp: datetime
+class ImpersonateResponse(BaseModel):
+    access_token: str
+    impersonated_email: str
+    message: str
+
+
+class EndImpersonationRequest(BaseModel):
+    access_token: str
