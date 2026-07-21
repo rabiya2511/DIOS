@@ -40,6 +40,7 @@ from app.models.user import (
     device_codes_db,
     login_history_db,
     audit_logs_db,
+    sessions_db,
 )
 from app.core.security import (
     hash_password,
@@ -86,6 +87,17 @@ def login(data: LoginRequest):
         "action": "login",
         "timestamp": datetime.now(timezone.utc),
     })
+
+    session_id = str(uuid4())
+    now = datetime.now(timezone.utc)
+    sessions_db[session_id] = {
+        "id": session_id,
+        "owner_email": user["email"],
+        "device": "Unknown",
+        "ip": "127.0.0.1",
+        "created_at": now,
+        "last_active_at": now,
+    }
 
     access_token = create_access_token(user["email"])
     refresh_token = create_refresh_token(user["email"])
@@ -306,7 +318,6 @@ def _test_approve_device(data: _TestApproveDeviceRequest):
             entry["email"] = data.email
             return None
     raise HTTPException(status_code=404, detail="User code not found")
-
 
 @router.post("/_test-make-admin", status_code=204)
 def _test_make_admin(current_user: dict = Depends(get_current_user)):

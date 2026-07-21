@@ -83,3 +83,4 @@ current_workspace_db: dict[str, str] = {}            # email -> workspace_id
 recent_workspaces_db: dict[str, list[str]] = {}   
 notifications_db: dict[str, list[dict]] = {}   # email -> [{id, message, read, created_at}]
 exports_db: dict[str, list[dict]] = {}          # email -> [{id, type, status, created_at}]   # email -> [workspace_id, ...] most recent first
+sessions_db: dict[str, dict] = {}   # session_id -> {id, owner_email, device, ip, created_at, last_active_at}
