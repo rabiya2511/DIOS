@@ -31,4 +31,4 @@ class GroupMembersResponse(BaseModel):
 
 class GroupSearchRequest(BaseModel):
    query: str
- 
+                                              
