@@ -4,6 +4,7 @@ org-level permission grants, audit log, access summary, transfer-owner.
 Matches the Organization Authorization section of the Authorization
 APIs blueprint (10/10). Reuses organizations_db and memberships_db from
 the existing organizations.py router rather than duplicating org data.
+Also feeds the shared audit_logs_db so GET /audit/organizations has real data.
 """
 
 from datetime import datetime, timezone
@@ -22,6 +23,7 @@ from app.schemas.org_authorization import (
 )
 from app.routers.organizations import organizations_db, memberships_db
 from app.routers.permissions import permissions_db
+from app.models.user import audit_logs_db
 from app.core.security import get_current_user
 
 router = APIRouter(prefix="/api/v1/organizations", tags=["Organization Authorization"])
@@ -31,6 +33,15 @@ org_permissions_db: dict[str, dict[str, dict]] = {}
 
 # append-only audit log
 org_audit_db: list[dict] = []
+
+_ORG_ACTION_MAP = {
+    "member_added": "org_update",
+    "member_removed": "org_update",
+    "member_role_updated": "org_update",
+    "permission_granted": "org_update",
+    "permission_revoked": "org_update",
+    "ownership_transferred": "org_update",
+}
 
 
 def _get_org_or_404(org_id: str) -> dict:
@@ -53,6 +64,14 @@ def _log_audit(org_id: str, action: str, actor_email: str, detail: str):
             "action": action,
             "actor_email": actor_email,
             "detail": detail,
+            "timestamp": datetime.now(timezone.utc),
+        }
+    )
+    # also feed the shared cross-domain audit log used by GET /audit/organizations
+    audit_logs_db.append(
+        {
+            "actor_email": actor_email,
+            "action": _ORG_ACTION_MAP.get(action, "org_update"),
             "timestamp": datetime.now(timezone.utc),
         }
     )

@@ -1,6 +1,7 @@
 """
 Roles & Permissions router — roles CRUD + fixed permissions list,
 plus clone/archive/restore and system/custom views (Authorization blueprint).
+Also feeds the shared audit_logs_db so GET /audit/roles has real data.
 """
 
 from datetime import datetime, timezone
@@ -14,7 +15,7 @@ from app.schemas.roles import (
     RoleOut,
    
 )
-from app.models.user import roles_db
+from app.models.user import roles_db, audit_logs_db
 from app.core.security import get_current_user
 
 router = APIRouter(prefix="/api/v1", tags=["Roles & Permissions"])
@@ -59,6 +60,14 @@ def _require_custom(role: dict, action: str):
         raise HTTPException(status_code=403, detail=f"System roles cannot be {action}")
 
 
+def _log_role_audit(actor_email: str, action: str):
+    audit_logs_db.append(
+        {
+            "actor_email": actor_email,
+            "action": action,
+            "timestamp": datetime.now(timezone.utc),
+        }
+    )
 
 
 @router.get("/roles", response_model=list[RoleOut])
@@ -92,6 +101,7 @@ def create_role(
         "archived": False,
     }
     roles_db[role_id] = role
+    _log_role_audit(current_user["email"], "role_create")
     return role
 
 
@@ -115,6 +125,7 @@ def update_role(
         role["name"] = data.name
     if data.permissions is not None:
         role["permissions"] = data.permissions
+    _log_role_audit(current_user["email"], "role_update")
     return role
 
 
@@ -126,6 +137,7 @@ def delete_role(
     role = _get_role_or_404(role_id)
     _require_custom(role, "deleted")
     del roles_db[role_id]
+    _log_role_audit(current_user["email"], "role_delete")
     return None
 
 
