@@ -85,3 +85,4 @@ notifications_db: dict[str, list[dict]] = {}   # email -> [{id, message, read, c
 exports_db: dict[str, list[dict]] = {}          # email -> [{id, type, status, created_at}]   # email -> [workspace_id, ...] most recent first
 sessions_db: dict[str, dict] = {}   # session_id -> {id, owner_email, device, ip, created_at, last_active_at}
 impersonation_sessions_db: dict[str, str] = {}   # impersonation_token -> admin_email (who started it)
+memberships_v2_db: dict[str, dict] = {}   # id -> {id, org_id, email, role, status, invited_by, created_at}
