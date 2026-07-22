@@ -88,3 +88,8 @@ impersonation_sessions_db: dict[str, str] = {}   # impersonation_token -> admin_
 memberships_v2_db: dict[str, dict] = {}   # id -> {id, org_id, email, role, status, invited_by, created_at}
 departments_db: dict[str, dict] = {}   # id -> {id, org_id, name, creator_email, created_at}
 billing_credits_db: dict[str, float] = {}   # email -> credit balance
+billing_config_db: dict = {
+    "currency": "USD",
+    "tax_rate_percent": 0.0,
+    "auto_billing_enabled": True,
+}
