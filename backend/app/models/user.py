@@ -93,3 +93,5 @@ billing_config_db: dict = {
     "tax_rate_percent": 0.0,
     "auto_billing_enabled": True,
 }
+storage_buckets_db: dict[str, dict] = {}   # id -> {id, name, owner_email, region, created_at}
+storage_quotas_db: dict[str, dict] = {}     # email -> {limit_bytes, updated_at}
