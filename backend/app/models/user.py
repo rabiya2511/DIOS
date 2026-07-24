@@ -99,3 +99,4 @@ workspace_settings_db: dict[str, dict] = {}      # workspace_id -> {settings dic
 workspace_branding_db: dict[str, dict] = {}       # workspace_id -> {logo_url, primary_color, name_override}
 workspace_preferences_db: dict[str, dict] = {}    # workspace_id -> {preferences dict}
 workspace_activity_db: dict[str, list[dict]] = {}  # workspace_id -> [{action, actor_email, timestamp}]
+project_templates_db: dict[str, dict] = {}   # id -> {id, name, description, creator_email, created_at}
