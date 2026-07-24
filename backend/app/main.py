@@ -4,7 +4,7 @@ Every new domain (mfa, oauth, billing, video...) gets built as
 its own router file, then added here with one line.
 """
 from fastapi import FastAPI
-from app.routers import auth, password,  mfa, oauth, tokens, profile, organizations, api_keys, service_accounts, roles, permissions, role_assignments, policies, access, org_authorization, teams, resources, user_management, devices, security, admin_users, admin_org_roles, admin_platform, admin_system, admin_security, admin_backup, authz_audit, groups, workspaces, activity, sessions,notifications, email, sms_push, inapp, preferences, notifications_admin, membership, departments, audit_domain, monitoring,monitoring_metrics,monitoring_logs,monitoring_alerts , monitoring_tracing  ,monitoring_admin , billing_customers ,billing_subscriptions,billing_payments,billing_invoices,billing_usage ,billing_admin,fileslifecycle ,uploaddownload,folders,file_permissions,metadata,storage,processing,search_index,backup_sync
+from app.routers import auth, password,  mfa, oauth, tokens, profile, organizations, api_keys, service_accounts, roles, permissions, role_assignments, policies, access, org_authorization, teams, resources, user_management, devices, security, admin_users, admin_org_roles, admin_platform, admin_system, admin_security, admin_backup, authz_audit, groups, workspaces, activity, sessions,notifications, email, sms_push, inapp, preferences, notifications_admin, membership, departments, audit_domain, monitoring,monitoring_metrics,monitoring_logs,monitoring_alerts , monitoring_tracing  ,monitoring_admin , billing_customers ,billing_subscriptions,billing_payments,billing_invoices,billing_usage ,billing_admin,fileslifecycle ,uploaddownload,folders,file_permissions,metadata,storage,processing,search_index,backup_sync,files_admin
 
 app = FastAPI(title="DIOS API", version="0.1.0")
 app.include_router(auth.router)
@@ -63,6 +63,7 @@ app.include_router(uploaddownload.router)
 app.include_router(file_permissions.router)
 app.include_router(metadata.router)
 app.include_router(search_index.router)
+app.include_router(files_admin.router)
 app.include_router(fileslifecycle.router)
 app.include_router(folders.router)
 app.include_router(storage.router)
