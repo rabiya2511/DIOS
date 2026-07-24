@@ -1,6 +1,9 @@
 """
-Workspace router — CRUD, switch, recent, archive, restore.
-Matches the Workspace section of the User Management blueprint (8/8).
+Workspace router — CRUD, switch, recent, archive, restore, settings,
+branding, preferences, activity, audit.
+Matches the Workspace and Workspace Settings sections of the
+Projects & Workspace blueprint (7/7 new endpoints), plus the
+original Workspace section of the User Management blueprint (8/8).
 """
 
 from datetime import datetime, timezone
@@ -15,8 +18,23 @@ from app.schemas.workspaces import (
     WorkspaceSwitchRequest,
     WorkspaceSwitchResponse,
     WorkspaceArchiveRequest,
+    WorkspaceSettingsOut,
+    WorkspaceSettingsUpdateRequest,
+    WorkspaceBrandingOut,
+    WorkspaceBrandingUpdateRequest,
+    WorkspacePreferencesOut,
+    WorkspacePreferencesUpdateRequest,
+    WorkspaceActivityEntryOut,
 )
-from app.models.user import workspaces_db, current_workspace_db, recent_workspaces_db
+from app.models.user import (
+    workspaces_db,
+    current_workspace_db,
+    recent_workspaces_db,
+    workspace_settings_db,
+    workspace_branding_db,
+    workspace_preferences_db,
+    workspace_activity_db,
+)
 from app.core.security import get_current_user
 
 router = APIRouter(prefix="/api/v1/workspaces", tags=["Workspace"])
@@ -31,6 +49,14 @@ def _get_owned_workspace(workspace_id: str, current_user: dict) -> dict:
     if ws["owner_email"] != current_user["email"]:
         raise HTTPException(status_code=403, detail="Only the workspace owner can perform this action")
     return ws
+
+
+def _log_workspace_activity(workspace_id: str, action: str, actor_email: str):
+    workspace_activity_db.setdefault(workspace_id, []).append({
+        "action": action,
+        "actor_email": actor_email,
+        "timestamp": datetime.now(timezone.utc),
+    })
 
 
 @router.get("", response_model=list[WorkspaceOut])
@@ -110,6 +136,11 @@ def restore_workspace(
 
 # ─── Dynamic /{workspace_id} routes LAST ───
 
+@router.get("/{workspace_id}", response_model=WorkspaceOut)
+def get_workspace(workspace_id: str, current_user: dict = Depends(get_current_user)):
+    return _get_owned_workspace(workspace_id, current_user)
+
+
 @router.patch("/{workspace_id}", response_model=WorkspaceOut)
 def update_workspace(
     workspace_id: str,
@@ -130,3 +161,63 @@ def delete_workspace(
     _get_owned_workspace(workspace_id, current_user)
     del workspaces_db[workspace_id]
     return None
+
+
+@router.get("/{workspace_id}/settings", response_model=WorkspaceSettingsOut)
+def get_workspace_settings(workspace_id: str, current_user: dict = Depends(get_current_user)):
+    _get_owned_workspace(workspace_id, current_user)
+    return WorkspaceSettingsOut(workspace_id=workspace_id, settings=workspace_settings_db.get(workspace_id, {}))
+
+
+@router.patch("/{workspace_id}/settings", response_model=WorkspaceSettingsOut)
+def update_workspace_settings(
+    workspace_id: str,
+    data: WorkspaceSettingsUpdateRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    _get_owned_workspace(workspace_id, current_user)
+    settings = workspace_settings_db.setdefault(workspace_id, {})
+    settings.update(data.settings)
+    _log_workspace_activity(workspace_id, "settings_updated", current_user["email"])
+    return WorkspaceSettingsOut(workspace_id=workspace_id, settings=settings)
+
+
+@router.patch("/{workspace_id}/branding", response_model=WorkspaceBrandingOut)
+def update_workspace_branding(
+    workspace_id: str,
+    data: WorkspaceBrandingUpdateRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    _get_owned_workspace(workspace_id, current_user)
+    branding = workspace_branding_db.setdefault(
+        workspace_id, {"logo_url": "", "primary_color": "#000000", "name_override": None}
+    )
+    updates = data.model_dump(exclude_unset=True)
+    branding.update(updates)
+    _log_workspace_activity(workspace_id, "branding_updated", current_user["email"])
+    return WorkspaceBrandingOut(workspace_id=workspace_id, **branding)
+
+
+@router.patch("/{workspace_id}/preferences", response_model=WorkspacePreferencesOut)
+def update_workspace_preferences(
+    workspace_id: str,
+    data: WorkspacePreferencesUpdateRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    _get_owned_workspace(workspace_id, current_user)
+    prefs = workspace_preferences_db.setdefault(workspace_id, {})
+    prefs.update(data.preferences)
+    _log_workspace_activity(workspace_id, "preferences_updated", current_user["email"])
+    return WorkspacePreferencesOut(workspace_id=workspace_id, preferences=prefs)
+
+
+@router.get("/{workspace_id}/activity", response_model=list[WorkspaceActivityEntryOut])
+def get_workspace_activity(workspace_id: str, current_user: dict = Depends(get_current_user)):
+    _get_owned_workspace(workspace_id, current_user)
+    return sorted(workspace_activity_db.get(workspace_id, []), key=lambda x: x["timestamp"], reverse=True)
+
+
+@router.get("/{workspace_id}/audit", response_model=list[WorkspaceActivityEntryOut])
+def get_workspace_audit(workspace_id: str, current_user: dict = Depends(get_current_user)):
+    _get_owned_workspace(workspace_id, current_user)
+    return sorted(workspace_activity_db.get(workspace_id, []), key=lambda x: x["timestamp"], reverse=True)

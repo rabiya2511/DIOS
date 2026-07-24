@@ -191,4 +191,4 @@ def rename_file(
     _require_owner(file, current_user["email"])
     file["name"] = data.new_name
     file["updated_at"] = datetime.now(timezone.utc)
-    return file
+    return file 

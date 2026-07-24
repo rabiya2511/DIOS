@@ -95,3 +95,7 @@ billing_config_db: dict = {
 }
 storage_buckets_db: dict[str, dict] = {}   # id -> {id, name, owner_email, region, created_at}
 storage_quotas_db: dict[str, dict] = {}     # email -> {limit_bytes, updated_at}
+workspace_settings_db: dict[str, dict] = {}      # workspace_id -> {settings dict}
+workspace_branding_db: dict[str, dict] = {}       # workspace_id -> {logo_url, primary_color, name_override}
+workspace_preferences_db: dict[str, dict] = {}    # workspace_id -> {preferences dict}
+workspace_activity_db: dict[str, list[dict]] = {}  # workspace_id -> [{action, actor_email, timestamp}]
