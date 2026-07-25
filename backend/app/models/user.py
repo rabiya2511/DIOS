@@ -107,4 +107,6 @@ message_reports_db: list[dict] = []          # {id, message_id, reporter_email, 
 message_feedback_db: list[dict] = []          # {id, message_id, user_email, rating, comment, timestamp}
 moderation_actions_db: list[dict] = []        # {id, message_id, action, moderator_email, timestamp}
 conversation_ratings_db: list[dict] = []      # {id, conversation_id, user_email, rating, timestamp}
-dashboard_widgets_db: dict[str, dict] = {}   # id -> {id, owner_email, title, type, config, created_at}
+dashboard_widgets_db: dict[str, dict] = {}  
+reports_db: dict[str, dict] = {}   # id -> {id, name, type, filters, owner_email, schedule, created_at}
+report_runs_db: dict[str, list[dict]] = {}   # report_id -> [{id, result, generated_at}] # id -> {id, owner_email, title, type, config, created_at}
