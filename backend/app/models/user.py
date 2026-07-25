@@ -107,3 +107,4 @@ message_reports_db: list[dict] = []          # {id, message_id, reporter_email, 
 message_feedback_db: list[dict] = []          # {id, message_id, user_email, rating, comment, timestamp}
 moderation_actions_db: list[dict] = []        # {id, message_id, action, moderator_email, timestamp}
 conversation_ratings_db: list[dict] = []      # {id, conversation_id, user_email, rating, timestamp}
+dashboard_widgets_db: dict[str, dict] = {}   # id -> {id, owner_email, title, type, config, created_at}
