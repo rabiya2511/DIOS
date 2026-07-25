@@ -103,3 +103,7 @@ project_templates_db: dict[str, dict] = {}   # id -> {id, name, description, cre
 context_db: dict[str, dict] = {}                    # conversation_id -> {data: dict, owner_email, updated_at}
 memory_references_db: dict[str, list[dict]] = {}    # conversation_id -> [{id, memory_id, label, attached_at}]
 context_window_db: dict[str, dict] = {}              # conversation_id -> {window_size, updated_at}
+message_reports_db: list[dict] = []          # {id, message_id, reporter_email, reason, timestamp}
+message_feedback_db: list[dict] = []          # {id, message_id, user_email, rating, comment, timestamp}
+moderation_actions_db: list[dict] = []        # {id, message_id, action, moderator_email, timestamp}
+conversation_ratings_db: list[dict] = []      # {id, conversation_id, user_email, rating, timestamp}
