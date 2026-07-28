@@ -113,3 +113,12 @@ report_runs_db: dict[str, list[dict]] = {}   # report_id -> [{id, result, genera
 deployments_db: dict[str, dict] = {}                  # id -> {id, name, version, environment, status, owner_email, created_at, updated_at}
 deployment_history_db: dict[str, list[dict]] = {}      # deployment_id -> [{id, deployment_id, action, version, timestamp}]
 deployment_versions_db: dict[str, list[str]] = {}      # deployment_id -> [version strings, chronological, including rollbacks]
+infra_config_db: dict = {
+    "auto_scaling_enabled": True,
+    "max_nodes": 10,
+    "region": "us-east-1",
+}
+infra_backups_db: list[dict] = []   # {id, created_at, triggered_by}
+infra_logs_db: list[dict] = [
+    {"level": "INFO", "message": "Infrastructure monitoring initialized", "timestamp": "2026-07-25T00:00:00Z"},
+]
