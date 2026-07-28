@@ -110,3 +110,6 @@ conversation_ratings_db: list[dict] = []      # {id, conversation_id, user_email
 dashboard_widgets_db: dict[str, dict] = {}  
 reports_db: dict[str, dict] = {}   # id -> {id, name, type, filters, owner_email, schedule, created_at}
 report_runs_db: dict[str, list[dict]] = {}   # report_id -> [{id, result, generated_at}] # id -> {id, owner_email, title, type, config, created_at}
+deployments_db: dict[str, dict] = {}                  # id -> {id, name, version, environment, status, owner_email, created_at, updated_at}
+deployment_history_db: dict[str, list[dict]] = {}      # deployment_id -> [{id, deployment_id, action, version, timestamp}]
+deployment_versions_db: dict[str, list[str]] = {}      # deployment_id -> [version strings, chronological, including rollbacks]
