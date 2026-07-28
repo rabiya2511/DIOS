@@ -122,3 +122,5 @@ infra_backups_db: list[dict] = []   # {id, created_at, triggered_by}
 infra_logs_db: list[dict] = [
     {"level": "INFO", "message": "Infrastructure monitoring initialized", "timestamp": "2026-07-25T00:00:00Z"},
 ]
+chat_sessions_db: dict[str, dict] = {}   # id -> {id, title, owner_email, status, created_at, updated_at}
+chat_shares_db: dict[str, dict] = {}      # share_token -> {chat_id, shared_by, created_at}
