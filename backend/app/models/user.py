@@ -125,3 +125,5 @@ infra_logs_db: list[dict] = [
 chat_sessions_db: dict[str, dict] = {}   # id -> {id, title, owner_email, status, created_at, updated_at}
 chat_shares_db: dict[str, dict] = {}      # share_token -> {chat_id, shared_by, created_at}
 chat_messages_db: dict[str, dict] = {}   # id -> {id, chat_id, role, content, owner_email, pinned, reactions, created_at}
+chat_memories_db: dict[str, dict] = {}   # id -> {id, owner_email, chat_id, content, tags, created_at, updated_at}
+rag_sources_db: dict[str, dict] = {}   # id -> {id, owner_email, title, content, indexed_at, created_at}
