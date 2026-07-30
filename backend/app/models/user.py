@@ -127,3 +127,11 @@ chat_shares_db: dict[str, dict] = {}      # share_token -> {chat_id, shared_by, 
 chat_messages_db: dict[str, dict] = {}   # id -> {id, chat_id, role, content, owner_email, pinned, reactions, created_at}
 chat_memories_db: dict[str, dict] = {}   # id -> {id, owner_email, chat_id, content, tags, created_at, updated_at}
 rag_sources_db: dict[str, dict] = {}   # id -> {id, owner_email, title, content, indexed_at, created_at}
+agent_status_db: dict[str, bool] = {}   # agent_id -> enabled (bool)
+agent_config_db: dict = {
+    "max_concurrent_agents": 10,
+    "default_timeout_seconds": 300,
+    "auto_retry_enabled": True,
+}
+agent_policies_db: list[dict] = []   # {id, name, rule, created_at}
+agent_ops_log_db: list[dict] = []     # {operation, timestamp, triggered_by}
