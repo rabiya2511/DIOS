@@ -66,7 +66,7 @@ def _get_or_create_state(email: str) -> dict:
     )
 
 
-@router.get("/models", response_model=list[ModelResponse])
+@router.get("/chat/models", response_model=list[ModelResponse])
 def list_models():
     return list(models_db.values())
 

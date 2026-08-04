@@ -137,3 +137,5 @@ agent_policies_db: list[dict] = []   # {id, name, rule, created_at}
 agent_ops_log_db: list[dict] = []     # {operation, timestamp, triggered_by}
 knowledge_bases_db: dict[str, dict] = {}   # id -> {id, name, description, owner_email, status, created_at, updated_at}
 kb_documents_db: dict[str, dict] = {}   # id -> {id, knowledge_id, title, content, owner_email, status, created_at, updated_at}
+ai_models_db: dict[str, dict] = {}   # id -> {id, name, provider, owner_email, status, created_at, updated_at}
+model_versions_db: dict[str, dict] = {}   # id -> {id, model_id, version, notes, created_at}
