@@ -139,3 +139,5 @@ knowledge_bases_db: dict[str, dict] = {}   # id -> {id, name, description, owner
 kb_documents_db: dict[str, dict] = {}   # id -> {id, knowledge_id, title, content, owner_email, status, created_at, updated_at}
 ai_models_db: dict[str, dict] = {}   # id -> {id, name, provider, owner_email, status, created_at, updated_at}
 model_versions_db: dict[str, dict] = {}   # id -> {id, model_id, version, notes, created_at}
+conversation_memories_db: dict[str, dict] = {}   # id -> {id, conversation_id, content, owner_email, created_at, updated_at}
+conversation_memory_history_db: list[dict] = []   # {id, memory_id, action, timestamp}
