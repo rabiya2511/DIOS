@@ -5,15 +5,15 @@ Once PostgreSQL is set up, this file gets replaced with real
 database models, and the rest of the app barely has to change.
 """
 
-users_db: dict[str, dict] = {}                    # keyed by email
+users_db: dict[str, dict] = {}
+passwordless_tokens_db: dict[str, str] = {}                     # keyed by email
 refresh_tokens_db: dict[str, str] = {}             # refresh_token -> email
 password_reset_tokens_db: dict[str, str] = {}      # reset_token -> email
 mfa_secrets_db: dict[str, dict] = {}               # email -> {secret, confirmed}
 mfa_backup_codes_db: dict[str, list[str]] = {} 
 email_verification_tokens_db: dict[str, str] = {}   # token -> email
 invites_db: dict[str, dict] = {}                     # invite_token -> {"email":..., "organization_id":..., "role":...}
-organizations_db: dict[str, dict] = {}               # org_id -> {"name":..., "owner_email":..., "created_at":...}
-passwordless_tokens_db: dict[str, str] = {}           # login_token -> email
+organizations_db: dict[str, dict] = {}               # org_id -> {"name":..., "owner_email":..., "created_at":...}          # login_token -> email
 device_codes_db: dict[str, dict] = {}  
 password_history_db: dict[str, list[str]] = {} 
 oauth_connections_db: dict[str, dict[str, str]] = {} 

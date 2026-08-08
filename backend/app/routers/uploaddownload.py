@@ -14,7 +14,7 @@ import base64
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 
 from app.schemas.uploaddownload import (
     FileUploadRequest,
@@ -37,25 +37,29 @@ router = APIRouter(prefix="/api/v1/files", tags=["Upload & Download"])
 uploads_db: dict[str, dict] = {}
 
 
-@router.post("/upload", response_model=UploadedFileResponse, status_code=201)
-def upload_file(
-    data: FileUploadRequest,
+
+@router.post("/upload")
+async def upload_file(
+    file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user),
 ):
-    """Direct (non-chunked) upload — creates a file record immediately."""
+    contents = await file.read()
+
     file_id = str(uuid4())
     now = datetime.now(timezone.utc)
+
     files_db[file_id] = {
         "id": file_id,
-        "name": data.name,
-        "folder_id": data.folder_id,
-        "size_bytes": data.size_bytes or 0,
-        "mime_type": data.mime_type,
+        "name": file.filename,
+        "folder_id": None,
+        "size_bytes": len(contents),
+        "mime_type": file.content_type,
         "owner_email": current_user["email"],
         "status": "active",
         "created_at": now,
         "updated_at": now,
     }
+
     return files_db[file_id]
 
 

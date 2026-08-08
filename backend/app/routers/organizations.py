@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 
 from app.schemas.organizations import (
     OrganizationCreateRequest,
@@ -55,6 +56,15 @@ def _require_owner(org_id: str, email: str):
 def _require_member(org_id: str, email: str):
     if email not in memberships_db.get(org_id, {}):
         raise HTTPException(status_code=403, detail="Not a member of this organization")
+
+
+def _would_remove_last_owner(org_id: str, email: str, new_role: str) -> bool:
+    """True if changing `email`'s role away from owner would leave the org with none."""
+    members = memberships_db.get(org_id, {})
+    if members.get(email) != "owner" or new_role == "owner":
+        return False
+    owners = [e for e, r in members.items() if r == "owner"]
+    return len(owners) <= 1
 
 
 def _org_response(org: dict, role: str) -> OrganizationResponse:
@@ -117,6 +127,14 @@ def invite_member(
     _get_org_or_404(data.org_id)
     _require_admin(data.org_id, current_user["email"])
 
+    # Guard: don't let an invite silently strip the org's last owner
+    # (e.g. an owner re-inviting their own email as "member").
+    if _would_remove_last_owner(data.org_id, data.email, data.role):
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot change the last owner's role via invite",
+        )
+
     # STUB: real version emails an invite link/token; here we add directly.
     memberships_db[data.org_id][data.email] = data.role
     return {"detail": f"{data.email} added to organization as {data.role}"}
@@ -133,6 +151,13 @@ def update_member_role(
     members = memberships_db[data.org_id]
     if data.email not in members:
         raise HTTPException(status_code=404, detail="Member not found in organization")
+
+    # Guard: don't let a role change strip the org's last owner.
+    if _would_remove_last_owner(data.org_id, data.email, data.role):
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot change the last owner's role — promote another member to owner first",
+        )
 
     members[data.email] = data.role
     return None
@@ -199,8 +224,26 @@ def restore_organization(
     return _org_response(org, role)
 
 
+# ─── TEMPORARY dev-only helper — remove once a real recovery/support flow exists ───
+
+class _TestSetOwnerRequest(BaseModel):
+    org_id: str
+    email: str
+
+
+@router.post("/_test-set-owner", status_code=204)
+def _test_set_owner(data: _TestSetOwnerRequest):
+    """DEVELOPMENT ONLY: force-set an org owner when the last owner got locked
+    out (e.g. via an invite/role-update bug). Not gated by auth on purpose so
+    it can be used to recover from a lockout — remove before production."""
+    _get_org_or_404(data.org_id)
+    memberships_db.setdefault(data.org_id, {})[data.email] = "owner"
+    return None
+
+
 # /{org_id} catch-all — must come after all literal sibling paths above
-# (/invite, /member-role, /member, /members, /archive, /restore).
+# (/invite, /member-role, /member, /members, /archive, /restore,
+# /_test-set-owner).
 @router.get("/{org_id}", response_model=OrganizationResponse)
 def get_organization(org_id: str, current_user: dict = Depends(get_current_user)):
     org = _get_org_or_404(org_id)
@@ -229,4 +272,4 @@ def delete_organization(org_id: str, current_user: dict = Depends(get_current_us
     _require_owner(org_id, current_user["email"])
     del organizations_db[org_id]
     memberships_db.pop(org_id, None)
-    return None 
+    return None

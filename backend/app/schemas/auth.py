@@ -49,6 +49,9 @@ class RegisterOrganizationRequest(BaseModel):
     password: str
     full_name: str
 
+class RegisterOrganizationResponse(UserOut):
+    verification_token: str    
+
 
 class VerifyEmailRequest(BaseModel):
     token: str

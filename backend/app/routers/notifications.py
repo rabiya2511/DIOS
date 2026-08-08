@@ -1,12 +1,13 @@
 """
 Notification Management router — list, get, create, update, delete.
-Matches the Notification Management section of the Notifications APIs
-blueprint (5/5). GET/PATCH/DELETE are scoped to the current user's own
-notifications; POST allows creating a notification for any recipient
-(system/admin action).
 
-NOTE: mounted at /notification-items instead of /notifications to avoid
-colliding with the existing simple GET /notifications stub in activity.py.
+Authentication is enabled.
+
+GET/PATCH/DELETE are restricted to notifications belonging
+to the currently authenticated user.
+
+POST requires an authenticated user and allows the authenticated
+user to create a notification for a recipient.
 """
 
 from datetime import datetime, timezone
@@ -19,41 +20,117 @@ from app.schemas.notifications import (
     NotificationUpdateRequest,
     NotificationResponse,
 )
+
 from app.core.security import get_current_user
 
-router = APIRouter(prefix="/api/v1/notification-items", tags=["Notifications"])
 
-# id -> {id, recipient_email, title, body, type, read, created_at}
+router = APIRouter(
+    prefix="/api/v1/notification-items",
+    tags=["Notifications"],
+)
+
+
+# ---------------------------------------------------------
+# In-memory notification database
+# ---------------------------------------------------------
+
 notifications_db: dict[str, dict] = {}
 
 
-def _get_own_notification_or_404(id: str, email: str) -> dict:
-    n = notifications_db.get(id)
-    if not n or n["recipient_email"] != email:
-        raise HTTPException(status_code=404, detail="Notification not found")
-    return n
+# ---------------------------------------------------------
+# Get notification belonging to current user
+# ---------------------------------------------------------
+
+def get_own_notification_or_404(
+    notification_id: str,
+    email: str,
+) -> dict:
+
+    notification = notifications_db.get(notification_id)
+
+    if notification is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Notification not found",
+        )
+
+    if notification["recipient_email"] != email:
+        raise HTTPException(
+            status_code=404,
+            detail="Notification not found",
+        )
+
+    return notification
 
 
-@router.get("", response_model=list[NotificationResponse])
-def list_notifications(current_user: dict = Depends(get_current_user)):
+# ---------------------------------------------------------
+# LIST NOTIFICATIONS
+# ---------------------------------------------------------
+
+@router.get(
+    "",
+    response_model=list[NotificationResponse],
+)
+def list_notifications(
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Return notifications belonging to the logged-in user.
+    """
+
     return [
-        n for n in notifications_db.values() if n["recipient_email"] == current_user["email"]
+        notification
+        for notification in notifications_db.values()
+        if notification["recipient_email"] == current_user["email"]
     ]
 
 
-@router.get("/{id}", response_model=NotificationResponse)
-def get_notification(id: str, current_user: dict = Depends(get_current_user)):
-    return _get_own_notification_or_404(id, current_user["email"])
+# ---------------------------------------------------------
+# GET SINGLE NOTIFICATION
+# ---------------------------------------------------------
+
+@router.get(
+    "/{id}",
+    response_model=NotificationResponse,
+)
+def get_notification(
+    id: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Get one notification belonging to the logged-in user.
+    """
+
+    return get_own_notification_or_404(
+        id,
+        current_user["email"],
+    )
 
 
-@router.post("", response_model=NotificationResponse, status_code=201)
+# ---------------------------------------------------------
+# CREATE NOTIFICATION
+# ---------------------------------------------------------
+
+@router.post(
+    "",
+    response_model=NotificationResponse,
+    status_code=201,
+)
 def create_notification(
     data: NotificationCreateRequest,
     current_user: dict = Depends(get_current_user),
 ):
+    """
+    Create a notification.
+
+    The request must be authenticated.
+    """
+
     notification_id = str(uuid4())
+
     now = datetime.now(timezone.utc)
-    notifications_db[notification_id] = {
+
+    notification = {
         "id": notification_id,
         "recipient_email": data.recipient_email,
         "title": data.title,
@@ -62,27 +139,67 @@ def create_notification(
         "read": False,
         "created_at": now,
     }
-    return notifications_db[notification_id]
+
+    notifications_db[notification_id] = notification
+
+    return notification
 
 
-@router.patch("/{id}", response_model=NotificationResponse)
+# ---------------------------------------------------------
+# UPDATE NOTIFICATION
+# ---------------------------------------------------------
+
+@router.patch(
+    "/{id}",
+    response_model=NotificationResponse,
+)
 def update_notification(
     id: str,
     data: NotificationUpdateRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    n = _get_own_notification_or_404(id, current_user["email"])
+    """
+    Update a notification belonging to the logged-in user.
+    """
+
+    notification = get_own_notification_or_404(
+        id,
+        current_user["email"],
+    )
+
     if data.title is not None:
-        n["title"] = data.title
+        notification["title"] = data.title
+
     if data.body is not None:
-        n["body"] = data.body
+        notification["body"] = data.body
+
     if data.read is not None:
-        n["read"] = data.read
-    return n
+        notification["read"] = data.read
+
+    return notification
 
 
-@router.delete("/{id}", status_code=204)
-def delete_notification(id: str, current_user: dict = Depends(get_current_user)):
-    _get_own_notification_or_404(id, current_user["email"])
+# ---------------------------------------------------------
+# DELETE NOTIFICATION
+# ---------------------------------------------------------
+
+@router.delete(
+    "/{id}",
+    status_code=204,
+)
+def delete_notification(
+    id: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Delete a notification belonging to the logged-in user.
+    """
+
+    get_own_notification_or_404(
+        id,
+        current_user["email"],
+    )
+
     del notifications_db[id]
+
     return None

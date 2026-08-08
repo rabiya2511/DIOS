@@ -6,12 +6,13 @@ Matches sections 1 & 2 of the Auth blueprint.
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Form
 from pydantic import BaseModel
 from typing import Union
 import secrets
 
 from app.schemas.auth import (
+    RegisterOrganizationResponse,
     RegisterRequest,
     LoginRequest,
     RefreshRequest,
@@ -71,16 +72,23 @@ def register(data: RegisterRequest):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(data: LoginRequest):
-    user = users_db.get(data.email)
-    login_history_db.setdefault(data.email, []).append({
-        "success": bool(user and verify_password(data.password, user["hashed_password"])),
-        "ip": "127.0.0.1",  # TODO: capture real client IP once behind a proper request context
+def login(
+    username: str = Form(...),
+    password: str = Form(...)
+):
+    user = users_db.get(username)
+
+    login_history_db.setdefault(username, []).append({
+        "success": bool(user and verify_password(password, user["hashed_password"])),
+        "ip": "127.0.0.1",
         "timestamp": datetime.now(timezone.utc),
     })
 
-    if not user or not verify_password(data.password, user["hashed_password"]):
-        raise HTTPException(status_code=401, detail="Incorrect email or password")
+    if not user or not verify_password(password, user["hashed_password"]):
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect email or password"
+        )
 
     audit_logs_db.append({
         "actor_email": user["email"],
@@ -90,6 +98,7 @@ def login(data: LoginRequest):
 
     session_id = str(uuid4())
     now = datetime.now(timezone.utc)
+
     sessions_db[session_id] = {
         "id": session_id,
         "owner_email": user["email"],
@@ -101,7 +110,11 @@ def login(data: LoginRequest):
 
     access_token = create_access_token(user["email"])
     refresh_token = create_refresh_token(user["email"])
-    return TokenResponse(access_token=access_token, refresh_token=refresh_token)
+
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+    )
 
 
 @router.post("/refresh", response_model=TokenResponse)
@@ -155,12 +168,20 @@ def register_via_invite(data: RegisterInviteRequest):
     return user
 
 
-@router.post("/register/organization", response_model=UserOut, status_code=201)
+@router.post(
+    "/register/organization",
+    response_model=RegisterOrganizationResponse,
+    status_code=201,
+)
 def register_organization(data: RegisterOrganizationRequest):
     if data.email in users_db:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(
+            status_code=400,
+            detail="Email already registered"
+        )
 
     org_id = str(uuid4())
+
     organizations_db[org_id] = {
         "id": org_id,
         "name": data.organization_name,
@@ -179,8 +200,17 @@ def register_organization(data: RegisterOrganizationRequest):
         "role": "owner",
         "is_admin": False,
     }
+
     users_db[data.email] = user
-    return user
+
+    # Generate email verification token
+    verification_token = str(uuid4())
+    email_verification_tokens_db[verification_token] = data.email
+
+    return {
+        **user,
+        "verification_token": verification_token,
+    }
 
 
 @router.post("/verify-email", status_code=204)
